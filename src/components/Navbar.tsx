@@ -1,212 +1,169 @@
-
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Globe, LogOut, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu"
+import { Sun, Moon, Globe, User, LogOut, Menu, BarChart3, Settings, Trophy } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { t, language, setLanguage } = useLanguage();
-  const { theme, setTheme } = useTheme();
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
-  const location = useLocation();
-
-  const isActive = (path: string) => location.pathname === path;
-
-  const navItems = [
-    { path: '/', label: 'home' },
-    { path: '/about', label: 'about' },
-    { path: '/competitions', label: 'competitions' },
-    { path: '/contact', label: 'contact' },
-  ];
+  const { user, logout, isAdmin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
 
   return (
-    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">SC</span>
-              </div>
-              <span className="font-bold text-xl">SportCompet</span>
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <Trophy className="h-8 w-8 text-primary" />
+            <span className="font-bold text-xl">SportComp</span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="/" className="text-foreground hover:text-primary transition-colors">
+              {t('home')}
+            </Link>
+            <Link to="/about" className="text-foreground hover:text-primary transition-colors">
+              {t('about')}
+            </Link>
+            <Link to="#competitions" className="text-foreground hover:text-primary transition-colors">
+              {t('competitions')}
+            </Link>
+            <Link to="#contact" className="text-foreground hover:text-primary transition-colors">
+              {t('contact')}
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive(item.path)
-                    ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
-                }`}
-              >
-                {t(item.label as any)}
-              </Link>
-            ))}
-          </div>
-
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* Language Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
-              className="flex items-center space-x-1"
-            >
-              <Globe className="h-4 w-4" />
-              <span className="text-xs">{language.toUpperCase()}</span>
+          {/* Right side actions */}
+          <div className="flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <Button variant="ghost" size="sm" onClick={toggleTheme}>
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            >
-              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            {/* Language Toggle */}
+            <Button variant="ghost" size="sm" onClick={toggleLanguage}>
+              <Globe className="h-4 w-4 mr-2" />
+              {language.toUpperCase()}
             </Button>
 
             {/* User Menu */}
-            {isAuthenticated ? (
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <User className="h-4 w-4" />
-                    <span className="text-sm">{user?.name}</span>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <User className="h-4 w-4" />
+                    </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profil</span>
+                    </Link>
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link to="/dashboard">{t('dashboard')}</Link>
+                        <Link to="/dashboard">
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          <span>Dashboard</span>
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Paramètres</span>
+                        </Link>
+                      </DropdownMenuItem>
                     </>
                   )}
-                  <DropdownMenuItem onClick={logout} className="text-destructive">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t('logout')}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{t('logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" asChild>
                   <Link to="/login">{t('login')}</Link>
                 </Button>
-                <Button size="sm" asChild>
+                <Button asChild>
                   <Link to="/signup">{t('signup')}</Link>
                 </Button>
               </div>
             )}
-          </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
+            {/* Mobile menu toggle */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="flex flex-col space-y-4 mt-4">
+                  <Link to="/" className="text-lg font-medium">
+                    {t('home')}
+                  </Link>
+                  <Link to="/about" className="text-lg font-medium">
+                    {t('about')}
+                  </Link>
+                  <Link to="#competitions" className="text-lg font-medium">
+                    {t('competitions')}
+                  </Link>
+                  <Link to="#contact" className="text-lg font-medium">
+                    {t('contact')}
+                  </Link>
+                  {user && (
+                    <>
+                      <Link to="/profile" className="text-lg font-medium">
+                        Profil
+                      </Link>
+                      {isAdmin && (
+                        <>
+                          <Link to="/dashboard" className="text-lg font-medium">
+                            Dashboard
+                          </Link>
+                          <Link to="/settings" className="text-lg font-medium">
+                            Paramètres
+                          </Link>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {t(item.label as any)}
-                </Link>
-              ))}
-              
-              <div className="flex items-center justify-between px-3 py-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
-                  className="flex items-center space-x-1"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span className="text-xs">{language.toUpperCase()}</span>
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                >
-                  {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                </Button>
-              </div>
-
-              {isAuthenticated ? (
-                <div className="px-3 py-2 space-y-2">
-                  <div className="text-sm font-medium">{user?.name}</div>
-                  {isAdmin && (
-                    <Link
-                      to="/dashboard"
-                      className="block text-sm text-muted-foreground hover:text-foreground"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {t('dashboard')}
-                    </Link>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      logout();
-                      setIsOpen(false);
-                    }}
-                    className="w-full justify-start text-destructive"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t('logout')}
-                  </Button>
-                </div>
-              ) : (
-                <div className="px-3 py-2 space-y-2">
-                  <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                    <Link to="/login" onClick={() => setIsOpen(false)}>{t('login')}</Link>
-                  </Button>
-                  <Button size="sm" asChild className="w-full">
-                    <Link to="/signup" onClick={() => setIsOpen(false)}>{t('signup')}</Link>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );

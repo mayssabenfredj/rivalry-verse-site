@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Trophy, Users, BarChart3, Vote, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Trophy, Users, BarChart3, Vote, Plus, Edit, Trash2, Eye, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,11 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import AddCompetitionForm from '@/components/forms/AddCompetitionForm';
+import AddPlayerForm from '@/components/forms/AddPlayerForm';
+import CreateVoteForm from '@/components/forms/CreateVoteForm';
 
 const Dashboard = () => {
   const { user, isAdmin } = useAuth();
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddCompetition, setShowAddCompetition] = useState(false);
+  const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [showCreateVote, setShowCreateVote] = useState(false);
 
   if (!isAdmin) {
     return <Navigate to="/" replace />;
@@ -41,6 +48,24 @@ const Dashboard = () => {
     { id: 1, category: 'Meilleur Joueur', options: ['Alexandre', 'Sophie', 'Lucas'], totalVotes: 1250 },
     { id: 2, category: 'Match de la Semaine', options: ['Football Final', 'Tennis Semi', 'Basket Quarter'], totalVotes: 890 },
   ];
+
+  const handleAddCompetition = (data: any) => {
+    console.log('Nouvelle compétition:', data);
+    setShowAddCompetition(false);
+    // Ici on ajouterait la logique pour sauvegarder en base
+  };
+
+  const handleAddPlayer = (data: any) => {
+    console.log('Nouveau joueur:', data);
+    setShowAddPlayer(false);
+    // Ici on ajouterait la logique pour sauvegarder en base
+  };
+
+  const handleCreateVote = (data: any) => {
+    console.log('Nouveau vote:', data);
+    setShowCreateVote(false);
+    // Ici on ajouterait la logique pour sauvegarder en base
+  };
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -111,10 +136,20 @@ const Dashboard = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Gestion des Compétitions</CardTitle>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nouvelle Compétition
-                  </Button>
+                  <Dialog open={showAddCompetition} onOpenChange={setShowAddCompetition}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nouvelle Compétition
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <AddCompetitionForm
+                        onSubmit={handleAddCompetition}
+                        onCancel={() => setShowAddCompetition(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 <CardDescription>
                   Créez, modifiez et gérez toutes vos compétitions
@@ -145,15 +180,33 @@ const Dashboard = () => {
                           <Badge variant={comp.status === 'En cours' ? 'default' : 'secondary'}>
                             {comp.status}
                           </Badge>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => window.open(`/competition/${comp.id}`, '_blank')}>
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm">
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Êtes-vous sûr de vouloir supprimer la compétition "{comp.name}" ? Cette action est irréversible.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Supprimer
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     ))}
@@ -166,7 +219,23 @@ const Dashboard = () => {
           <TabsContent value="players" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gestion des Joueurs</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Gestion des Joueurs</CardTitle>
+                  <Dialog open={showAddPlayer} onOpenChange={setShowAddPlayer}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nouveau Joueur
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <AddPlayerForm
+                        onSubmit={handleAddPlayer}
+                        onCancel={() => setShowAddPlayer(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <CardDescription>
                   Visualisez et gérez tous les joueurs inscrits
                 </CardDescription>
@@ -200,6 +269,27 @@ const Dashboard = () => {
                           <Button variant="ghost" size="sm">
                             <Edit className="w-4 h-4" />
                           </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Êtes-vous sûr de vouloir supprimer le joueur "{player.name}" ? Cette action est irréversible.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Supprimer
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     ))}
@@ -250,10 +340,20 @@ const Dashboard = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Système de Vote</CardTitle>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nouveau Vote
-                  </Button>
+                  <Dialog open={showCreateVote} onOpenChange={setShowCreateVote}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nouveau Vote
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <CreateVoteForm
+                        onSubmit={handleCreateVote}
+                        onCancel={() => setShowCreateVote(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 <CardDescription>
                   Gérez les votes et consultez les résultats
@@ -265,7 +365,30 @@ const Dashboard = () => {
                     <div key={vote.id} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-semibold">{vote.category}</h3>
-                        <Badge>{vote.totalVotes} votes</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge>{vote.totalVotes} votes</Badge>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Êtes-vous sûr de vouloir supprimer le vote "{vote.category}" ? Cette action est irréversible.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Supprimer
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
