@@ -11,12 +11,12 @@ const About = () => {
     {
       icon: Target,
       title: 'Notre Mission',
-      description: 'Révolutionner la gestion des compétitions sportives avec des outils modernes et intuitifs.'
+      description: 'Révolutionner la gestion des compétitions  avec des outils modernes et intuitifs.'
     },
     {
       icon: Users,
       title: 'Notre Équipe',
-      description: 'Une équipe passionnée de développeurs et d\'experts en sport unis par une vision commune.'
+      description: 'Une équipe passionnée de développeurs unis par une vision commune.'
     },
     {
       icon: Award,

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
@@ -6,18 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import api from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
-  const { t } = useLanguage();
-  const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { adminLogin, login } = useAuth();
   
   const [formData, setFormData] = useState({
-    email: '',
+    phone: '',
     password: '',
     rememberMe: false
   });
@@ -29,25 +27,36 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const success = await login(formData.email, formData.password);
+      // First try admin login
+      const adminResult = await adminLogin(formData.phone, formData.password);
       
-      if (success) {
+      if (adminResult.success) {
         toast({
-          title: "Connexion réussie !",
-          description: "Bienvenue sur SportCompet",
+          title: "Connexion réussie",
+          description: "Bienvenue, vous êtes maintenant connecté en tant qu'admin",
         });
-        navigate('/');
-      } else {
-        toast({
-          title: "Erreur de connexion",
-          description: "Email ou mot de passe incorrect",
-          variant: "destructive",
-        });
+        navigate('/dashboard');
+        return;
       }
-    } catch (error) {
+
+      // Regular login flow
+      const result = await login(formData.phone, formData.password);
+      
+      if (result.success) {
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue, vous êtes maintenant connecté",
+        });
+        navigate('/profile');
+      } else {
+        throw new Error(result.message || 'Échec de la connexion');
+      }
+
+    } catch (error: any) {
+      console.error('Erreur de connexion:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la connexion",
+        description: error.message || "Échec de la connexion. Vérifiez vos identifiants.",
         variant: "destructive",
       });
     } finally {
@@ -56,47 +65,56 @@ const Login = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
       <div className="w-full max-w-md">
-        <Card className="border-0 shadow-2xl">
-          <CardHeader className="text-center pb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8 text-white" />
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto bg-gradient-to-r from-primary to-accent p-3 rounded-full">
+              <LogIn className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold">{t('loginTitle')}</CardTitle>
-            <CardDescription>
-              Connectez-vous pour accéder à votre compte
-            </CardDescription>
+            <div className="space-y-2">
+              <CardTitle className="text-2xl font-bold">
+                Connexion
+              </CardTitle>
+              <CardDescription>
+                Connectez-vous avec votre numéro de téléphone
+              </CardDescription>
+            </div>
           </CardHeader>
-          
+
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  {t('email')}
+                <label htmlFor="phone" className="block text-sm font-medium">
+                  Numéro de téléphone
                 </label>
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
+                  id="phone"
+                  name="phone"
+                  type="tel"
                   required
-                  value={formData.email}
+                  value={formData.phone}
                   onChange={handleChange}
-                  placeholder="votre.email@exemple.com"
-                  className="h-12"
+                  placeholder="+1234567890"
+                  className="h-10"
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">
-                  {t('password')}
+                <label htmlFor="password" className="block text-sm font-medium">
+                  Mot de passe
                 </label>
                 <div className="relative">
                   <Input
@@ -107,14 +125,18 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="••••••••"
-                    className="h-12 pr-12"
+                    className="h-10 pr-10"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={togglePasswordVisibility}
+                    className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -123,50 +145,51 @@ const Login = () => {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="rememberMe"
+                    name="rememberMe"
                     checked={formData.rememberMe}
                     onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
+                      setFormData(prev => ({ ...prev, rememberMe: Boolean(checked) }))
                     }
                   />
                   <label htmlFor="rememberMe" className="text-sm">
-                    {t('rememberMe')}
+                    Se souvenir de moi
                   </label>
                 </div>
-                
                 <Link
                   to="/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
-                  {t('forgotPassword')}
+                  Mot de passe oublié ?
                 </Link>
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-12 text-base"
+                className="w-full h-10"
                 disabled={isLoading}
               >
-                {isLoading ? t('loading') : t('login')}
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Connexion...
+                  </span>
+                ) : (
+                  'Se connecter'
+                )}
               </Button>
             </form>
 
-            <div className="mt-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                {t('noAccount')}{' '}
-                <Link to="/signup" className="text-primary hover:underline font-medium">
-                  {t('signup')}
-                </Link>
-              </p>
-            </div>
-
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <p className="text-xs text-muted-foreground text-center mb-2">
-                Comptes de démonstration:
-              </p>
-              <p className="text-xs text-muted-foreground">
-                <strong>Admin:</strong> admin@example.com / admin<br />
-                <strong>Joueur:</strong> Tout autre email/mot de passe
-              </p>
+            <div className="mt-6 text-center text-sm">
+              Pas encore de compte ?{' '}
+              <Link
+                to="/register"
+                className="font-medium text-primary hover:underline"
+              >
+                Créer un compte
+              </Link>
             </div>
           </CardContent>
         </Card>

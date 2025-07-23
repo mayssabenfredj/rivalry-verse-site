@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
@@ -11,15 +10,18 @@ import { useToast } from '@/hooks/use-toast';
 
 const Signup = () => {
   const { t } = useLanguage();
-  const { signup } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
+    name: '',
+    age: '',
+    phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    email: '',
+    photo: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -40,25 +42,32 @@ const Signup = () => {
     }
 
     try {
-      const success = await signup(formData.fullName, formData.email, formData.password);
+      const response = await register({
+        name: formData.name,
+        age: parseInt(formData.age),
+        phone: formData.phone,
+        password: formData.password,
+        email: formData.email || undefined,
+        photo: formData.photo || undefined
+      });
       
-      if (success) {
+      if (response) {
         toast({
           title: "Inscription réussie !",
           description: "Bienvenue sur SportCompet",
         });
-        navigate('/');
-      } else {
-        toast({
-          title: "Erreur d'inscription",
-          description: "Veuillez vérifier vos informations",
-          variant: "destructive",
-        });
+        navigate('/login');
       }
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = "Une erreur est survenue lors de l'inscription";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'inscription",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -90,15 +99,15 @@ const Signup = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="fullName" className="text-sm font-medium">
-                  {t('fullName')}
+                <label htmlFor="name" className="text-sm font-medium">
+                  Nom complet
                 </label>
                 <Input
-                  id="fullName"
-                  name="fullName"
+                  id="name"
+                  name="name"
                   type="text"
                   required
-                  value={formData.fullName}
+                  value={formData.name}
                   onChange={handleChange}
                   placeholder="Votre nom complet"
                   className="h-12"
@@ -106,14 +115,46 @@ const Signup = () => {
               </div>
 
               <div className="space-y-2">
+                <label htmlFor="age" className="text-sm font-medium">
+                  Âge
+                </label>
+                <Input
+                  id="age"
+                  name="age"
+                  type="number"
+                  min="18"
+                  required
+                  value={formData.age}
+                  onChange={handleChange}
+                  placeholder="Votre âge"
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium">
+                  Téléphone
+                </label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+1234567890"
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
-                  {t('email')}
+                  Email (optionnel)
                 </label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  required
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="votre.email@exemple.com"
@@ -122,8 +163,23 @@ const Signup = () => {
               </div>
 
               <div className="space-y-2">
+                <label htmlFor="photo" className="text-sm font-medium">
+                  Photo (URL optionnel)
+                </label>
+                <Input
+                  id="photo"
+                  name="photo"
+                  type="text"
+                  value={formData.photo}
+                  onChange={handleChange}
+                  placeholder="https://example.com/photo.jpg"
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium">
-                  {t('password')}
+                  Mot de passe
                 </label>
                 <div className="relative">
                   <Input
@@ -131,6 +187,7 @@ const Signup = () => {
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
+                    minLength={8}
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="••••••••"
@@ -148,7 +205,7 @@ const Signup = () => {
 
               <div className="space-y-2">
                 <label htmlFor="confirmPassword" className="text-sm font-medium">
-                  {t('confirmPassword')}
+                  Confirmer le mot de passe
                 </label>
                 <div className="relative">
                   <Input
@@ -176,15 +233,15 @@ const Signup = () => {
                 className="w-full h-12 text-base"
                 disabled={isLoading}
               >
-                {isLoading ? t('loading') : t('signup')}
+                {isLoading ? 'Chargement...' : 'S\'inscrire'}
               </Button>
             </form>
 
             <div className="mt-8 text-center">
               <p className="text-sm text-muted-foreground">
-                {t('hasAccount')}{' '}
+                Vous avez déjà un compte?{' '}
                 <Link to="/login" className="text-primary hover:underline font-medium">
-                  {t('login')}
+                  Se connecter
                 </Link>
               </p>
             </div>
